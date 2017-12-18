@@ -1,0 +1,35 @@
+package com.example.a0000.guardian;
+
+public class config{
+	final static String val_light = "light lux:";
+	final static int SENSOR_RATE = 50000;	// Sampling Rate: 20hz
+	final static int SENSOR_STEPS = 50;		// timesteps 
+	final static boolean IN_PACK = false;	// Whether in pocket
+	static int THRE_LIGHT = 70;				// Light threshold
+	final static int SENSORS = 2;			// Sensor number
+	final static int LINGHT_OUT = 20000;	// Suppose the outside world light intensity
+	final static int LIGHT_MIN = 0,LIGHT_MAX = 200;// 
+	final static int STATE_OUT = 0, STATE_IN = 1, STATE_OUTING = 2;
+	static boolean MODE_DAY = true;		// Whether the daylight mode
+
+
+	static int timeout = 10;		// Display interval: 10s
+	
+	// ------------massage types------------
+	final static int MSG_STOP = 0;		// start signal
+	final static int MSG_START = 1;		// stop signal
+	final static int MSG_INFO = 2;		// means information string
+	final static int MSG_DATA = 3;		// means data
+	final static int MSG_RESULT = 4;	// means result
+	final static int MSG_HANDLER = 5;	// handler
+	final static int TIMER_PERIOD = 50;	// millisecond
+	final static int TIMER_SEND = 10;	// slot
+	final static int RES_THIEF = 1; 	// log.e tag
+	final static int RES_SELF = 0;	    // log.e tag
+	final static int RES_NORMAL = -1;	// log.e tag
+	final static String LOG_TAG = "guadian";	// log.e tag
+	final static String KEY_DATA = "key-data";	// key for sharedpref
+	final static String HANDLER_MAIN = "main";	// handler
+	final static String HANDLER_DATA = "data layer";	// handler
+	final static String HANDLER_NET = "net layer";	// handler
+}
