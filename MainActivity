@@ -1,0 +1,516 @@
+package com.example.a0000.guardian;
+
+/*import android.app.KeyguardManager;
+import android.app.Service;
+import android.content.Intent;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.os.Handler;
+import android.os.Message;
+import android.os.PowerManager;
+import android.os.SystemClock;
+import android.os.Vibrator;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Chronometer;
+import android.widget.TextView;
+import android.widget.Toast;
+
+
+
+public class MainActivity extends AppCompatActivity {
+    private Button button,button1,button2,button3;
+    private static TextView tvMes;
+    private Thread Thread1;
+    private Thread Thread2;
+    Chronometer ch;
+
+    Vibrator vibrator;
+    AudioManager aManager;
+    MediaPlayer mPlayer;
+    PowerManager mPowmanager;
+    PowerManager.WakeLock mWakelock;
+    KeyguardManager mKeyguardManager;
+    // Keyboard lock
+    KeyguardManager.KeyguardLock mKeyguardLock;
+
+    public Handler mHandler=new Handler()
+    {
+        public void handleMessage(Message msg)
+        {
+            switch(msg.what)
+            {
+                case 1:
+                    tvMes.setText(msg.obj.toString());
+                default:
+                    break;
+            }
+            super.handleMessage(msg);
+        }
+    };
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        button = (Button) findViewById(R.id.button);
+        button1 = (Button)findViewById(R.id.button1);
+        button2 = (Button) findViewById(R.id.button2);
+        button3 = (Button) findViewById(R.id.button3);
+        tvMes =(TextView)findViewById(R.id.tv);
+        ch=(Chronometer)findViewById(R.id.test);
+
+
+        vibrator=(Vibrator)getSystemService(Service.VIBRATOR_SERVICE);
+        aManager=(AudioManager)getSystemService(Service.AUDIO_SERVICE);
+        mPlayer=MediaPlayer.create(MainActivity.this,R.raw.my);
+        mPowmanager=(PowerManager)getSystemService(Service.POWER_SERVICE);
+        mKeyguardManager = (KeyguardManager) getSystemService(Service.KEYGUARD_SERVICE);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Use Message.Obtain+Hander.sendMessage()to send messages
+                Thread1=new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Message msg = Message.obtain();
+                        msg.what = 1;
+                        msg.obj = "Turn on anti-theft mode";
+                        mHandler.sendMessage(msg);}
+
+                });
+                Thread1.start();
+            }
+        });
+        ch.setBase(SystemClock.elapsedRealtime());
+        ch.start();
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                vibrator.vibrate(2000);//vibration：2s
+            }
+        });
+        button2.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View sourse) {
+                mPlayer.setLooping(true);
+                mPlayer.start();
+            }
+        });
+        button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Close the process
+                tvMes.setText("");
+                mPlayer.release();
+            }
+        });
+        ch.setOnChronometerTickListener(new Chronometer.OnChronometerTickListener()
+        {
+            @Override
+            public void onChronometerTick(Chronometer ch)
+            {
+                if(SystemClock.elapsedRealtime()-ch.getBase()>10*1000)
+                {
+                    ch.stop();
+                    mWakelock= mPowmanager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "Tag");
+                    mWakelock.acquire();
+                    mKeyguardLock = mKeyguardManager.newKeyguardLock("LOCK_TAG");
+                    // Keyboard lock
+                    mKeyguardLock.disableKeyguard();
+                }
+            }
+        });
+    }
+}*/
+
+
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
+import android.app.Activity;
+import android.app.KeyguardManager;
+import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+import android.os.Vibrator;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.widget.*;
+
+public class MainActivity extends Activity {
+
+//    -----------------------------wzh
+    Button button,button3,b;
+    ImageView p;
+    Intent intent;
+    private WakeLock wklock;		// Power Management
+    private SensorManager sensorManager = null;		// Power Management
+    private Sensor sensor, sen_gy,lightsensor ;		// sensor
+    private double gragyr[] = new double[6];
+    private double light = 20000;
+    private LinkedList<Double> data = new LinkedList<Double>();
+    private Timer timer ;
+    private TimerTask task;
+    int step_dims = 6,count = 0;
+    boolean mask = false;
+    Saver saver;
+    private int STATE = config.STATE_OUT;	// Initial outside pocket
+    int time_step = 0;
+
+//    -------------sjx-------------
+    bpnn t=new bpnn();
+
+    Vibrator vibrator;
+    AudioManager aManager;
+    MediaPlayer mPlayer;
+    PowerManager mPowmanager;
+    PowerManager.WakeLock mWakelock;
+    KeyguardManager mKeyguardManager;
+    // Keyboard lock
+    KeyguardManager.KeyguardLock mKeyguardLock;
+    double[][] TestData={{-0.4127655,-4.597809,0.5395813,1.2507019,1.0126038,0.114349365,-0.30030823,-8.985046,-1.2167511,1.0008698,0.37120056,0.4264984,-0.09451294,-7.9286194,-1.2789612,0.879303,1.0242157,0.19802856,0.27038574,-8.443085,-1.6917267,0.86402893,0.52207947,0.63357544,1.6881409,-10.1707,-1.426117,0.74858093,1.0254364,0.5798187,6.569504,-13.648666,-1.7946167,0.5359955,0.643631,0.4063263,-1.450058,-12.658035,-1.774292,-0.11212158,-0.19628906,-0.99253845,-3.434906,-11.930618,-4.508087,-0.94044495,-1.2433014,-0.7103119,-5.790634,-14.535202,2.371292,-2.253189,0.47076416,-0.10922241,-1.9226379,-12.076584,-1.272995,-1.3057404,0.71022034,0.17114258,-0.66999817,-6.1567383,-2.499298,-1.4645691,-0.016693115,-0.12023926,-0.49172974,-3.9338074,-1.1736908,-1.2556458,-1.1938324,0.19984436,-0.23928833,-5.108673,-1.1688995,-0.55804443,-0.3746643,-0.16786194,-0.4893341,-5.4388885,-2.539978,0.19270325,-0.5139313,-0.22529602,1.3352051,-8.91806,-6.4115753,1.6056213,-0.9464264,-0.79522705,-5.5824585,-14.560333,-7.274185,0.14994812,-0.25187683,-1.4317474,-2.5256348,-11.167313,-8.989838,-0.7364197,0.26124573,-0.7640686,-0.7405853,-14.85704,0.8063812,-0.8329315,1.2905579,-0.66633606,2.555542,-7.680969,0.86979675,0.7210846,1.7798462,-0.62480164,1.0887299,-7.672592,0.6795654,0.5506592,1.1085052,-0.6186981,2.1559448,-11.533417,-1.4990997,0.4596405,0.78842163,1.3452301,-0.31585693,-4.4351044,1.9525452,0.32035828,0.8378906,0.7300873,1.7671051,-7.235901,-0.5886383,0.8628082,1.684555,0.7154236,1.5206451,-6.9595337,-0.20817566,0.28004456,1.8451996,0.8760834,1.5780792,-8.708679,-2.745758,0.47857666,0.10058594,1.2395477,4.482956,-10.916061,-2.6476593,0.24951172,0.5465088,0.96343994,5.399399,-10.552353,-0.41755676,0.24095154,0.6729584,0.56025696,2.999405,-11.716461,-2.7840576,0.23301697,-0.019134521,-0.23995972,3.2039948,-15.583267,-0.0993042,0.15725708,-0.2952423,-0.86486816,-1.183258,-12.579071,-2.4610138,-0.12005615,-1.4980316,-1.790329,-3.7124786,-12.744186,1.4356995,-0.90501404,-0.55119324,-1.2063446,4.1730804,-9.156143,-1.3052979,-0.45970154,-0.6299896,-0.6669464,2.0602264,-7.1066895,-0.98583984,-0.14816284,-1.0539398,-0.75857544,0.72502136,-7.063614,-0.14237976,0.4602661,-0.8040924,-0.31019592,1.9788666,-8.584259,-0.5970154,1.1517487,-0.37954712,-0.010894775,4.022339,-7.8664093,-5.246277,1.5451508,0.5092621,0.33302307,6.5563354,-11.175674,-0.5539398,1.1425934,-0.4705658,-1.1593018,9.396622,-9.902695,-0.3589325,0.8041687,0.61187744,-1.2692566,6.8638153,-10.49971,-2.8414764,1.138916,1.915451,-3.1091766,10.051056,-7.5577393,3.1202393,0.7608032,2.2844086,-3.218521,10.577484,-6.5431824,6.1663055,0.50302124,2.0724487,-4.203232,7.3902435,-5.44368,4.8047943,1.0124664,2.6521606,-6.1121826,3.3332062,-2.712265,4.7533417,0.57936096,2.881836,-6.277115,2.6823578,0.29432678,4.626526,-0.4358673,3.0693817,-4.4469604,4.8837585,1.0193481,5.6195526,-0.6533356,2.5464783,-3.993103,4.5786743,1.1377869,8.764908,-0.42793274,2.796936,-3.7896729,-0.105285645,2.4347076,6.8805695,0.3796234,3.168335,-2.6895142,0.54914856,3.4720001,10.124039,0.91534424,1.2483826,-2.001068,-0.6424866,4.5355988,6.273987,1.3362427,0.27896118,-1.7048035,0.33738708,3.1298218,9.024536,0.29226685,-0.9097748,-0.95710754
+            -2.8510482,-6.634101,-19.599611,1.3365731,-0.27488935,-1.8851302,-7.873583,-1.66361,4.752744,-2.8906143,1.563815,-1.2290609,4.551747,-7.0337024,2.6691937,0.9224065,1.2425,3.4538321,1.1312069,-8.930613,-2.8235307,1.6908749,1.5943583,1.563815,-2.3186452,-15.41576,-0.7956135,0.9957103,1.3817772,-0.02687807,4.491926,-11.109876,-4.706084,1.5784758,1.8704693,-0.028099801,4.909474,-16.290337,1.622932,0.87964594,0.79534656,-1.6933185,-1.8939191,-12.772887,11.566905,0.9737192,1.001819,-2.6535985,-3.0173495,-10.986047,4.298706,0.57910025,-0.50579643,-2.9553661,-4.5936213,-8.800203,6.332007,0.9456194,0.22724187,-3.145956,-4.5936213,-8.800203,6.332007,1.0958922,-0.938289,-1.5931365,2.5387847,-8.437093,-3.952345,0.43249258,-2.4886649,-1.0848967,3.4259238,-5.925227,0.04007978,-0.13072516,-1.5247196,-1.4416419,3.0957143,-6.4181485,-1.1862419,-0.17959438,-1.3487904,-1.4294246,4.0199423,-6.7663045,-1.2765709,0.530231,-0.17470746,0.7501425,4.2095733,-8.473583,3.5270207,0.23335052,0.5216789,1.8460348,3.091527,-12.519846,3.0089746,0.5815437,1.9572122,2.3921483,14.636896,-15.381064,-0.007178468,1.6908749,2.1783454,2.719572,3.714857,-13.453047,3.8410785,2.1697934,1.5503759,0.75625116,0.7375876,-12.373286,2.8827531,2.2174408,1.2388347,0.4447099,-3.4283166,-10.362717,1.1485549,1.7116444,1.3365731,1.6016886,6.9020967,-6.282356,4.307679,0.23335052,1.0897835,1.6505579,3.7680974,-4.8622155,6.4612193,-0.66828656,1.2473868,-0.4728097,5.519644,-6.3565335,11.222339,-0.63285637,-0.04642576,-2.411696,1.183849,-13.059428,10.636695,-0.1282817,0.37995818,-3.6969564,-0.19322044,-10.589437,5.7020965,3.8386772,-0.15149458,-6.686531,-0.19322044,-10.589437,5.7020965,4.3310347,1.6346754,-5.7323594,1.5038891,-8.29113,3.9583268,4.392121,2.6303856,-5.4953437,3.0478578,-4.599005,5.471189,4.1819835,2.6438248,-5.1972413,-0.12861422,-6.4325056,3.437888,3.3744197,4.3395867,-7.2192054,-6.593423,-4.9250274,2.7098718,0.9737192,2.2015584,-7.6883497,-6.4199433,-0.8117651,9.142976,-2.0158553,-0.7855727,-5.8215456,-6.2135625,1.6235301,16.639091,-3.880216,-0.8943067,-2.7757716,-4.0570307,-1.5050855,8.476574,0.5729916,2.7464502,0.73792523,-2.1882362,-1.0001999,6.0191455,0.10506882,1.1557571,2.2223277,-1.7581265,0.7471589,7.9280195,-0.089186326,0.20525073,2.3286183,-5.8707905,3.3672998,8.642278,-1.1203269,1.7116444,2.5350907,-3.3367913,2.7840493,11.257632,-0.6010914,0.9297369,2.701246,-2.2731814,2.1684957,4.6695933,1.205848,0.22113322,2.2076669,-3.4983068,2.2360928,11.493924,1.4648548,-1.9462167,1.5076154,-6.055038,0.2973082,12.477374,-1.709201,-0.7293731,-0.2773328,2.0111675,2.55374,6.539584,0.6719518,-3.3353243,0.3933972,-1.5433706,1.7120646,9.068798,-0.5094616,-0.5314528,0.05375614,-1.5433706,1.7120646,9.068798,-0.39095375,-0.7831292,-0.98715824,-0.031106696,2.4448667,6.052047,0.28710666,-1.455081,-1.0763446,4.3722854,2.5908287,5.148756,0.31520647,-1.5051719,-1.0213667,2.120639,0.46899325,5.1625147,0.21502456,-4.293161,-1.0910053,-1.689931,-1.5373886,2.155335,0.81245077,-7.0958104,-0.9138544,-6.134599,-5.252246,6.5485573,2.8344147,-12.433551,1.799609,6.4468627,-9.491131,-4.510471,5.362175,-9.550267,4.146553
+    }};
+    String NNet_Path="bpnn.snet";
+    int[] image=new int[]{
+            R.mipmap.guardian_open,R.mipmap.guardian_close
+    };
+
+
+
+    private SensorEventListener listener = new SensorEventListener() {
+        @Override
+        public void onAccuracyChanged(Sensor arg0, int arg1) {
+        }
+        @Override
+        public void onSensorChanged(SensorEvent e) {
+            switch (e.sensor.getType()){
+                case Sensor.TYPE_LIGHT:
+                    light = e.values[0];
+                    break;
+                case Sensor.TYPE_ACCELEROMETER:
+                    gragyr[0] = e.values[0];
+                    gragyr[1] = e.values[1];
+                    gragyr[2] = e.values[2];
+                    break;
+                case Sensor.TYPE_GYROSCOPE:
+                    gragyr[3] = e.values[0];
+                    gragyr[4] = e.values[1];
+                    gragyr[5] = e.values[2];
+                    break;
+                default:
+                    Log.e(config.LOG_TAG,e.sensor.getName());
+                    break;
+            }
+        }
+    };
+
+    //	Handler handler_net,handler_main;
+    Handler handler_net,handler_main = new Handler(){
+        public void handleMassage(Message msg){
+            switch(msg.what){
+                case config.MSG_INFO:
+                    String inf = (String)msg.obj;
+                    Toast.makeText(MainActivity.this,inf,Toast.LENGTH_SHORT).show();
+                    break;
+                case config.MSG_HANDLER:
+                    handler_net = (Handler)msg.obj;
+                    Toast.makeText(MainActivity.this,"ui layer: get net handler!",Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    Toast.makeText(MainActivity.this,"ui layer: unknow message!",Toast.LENGTH_SHORT).show();
+                    break;
+            }
+        }
+    };
+
+    private ServiceConnection connect = new ServiceConnection(){
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            BinderNL binder = (BinderNL) service;
+            handler_net = binder.getHandler();
+            Toast.makeText(MainActivity.this, "Connect successfully", Toast.LENGTH_SHORT).show();
+            Log.e(config.LOG_TAG,"on connection!");
+        }
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Toast.makeText(MainActivity.this, "Disconnect:　"+name.toString(), Toast.LENGTH_SHORT).show();
+            Log.e(config.LOG_TAG,"disconnection! "+ name.toString());
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        button = (Button)findViewById(R.id.button1);
+        button3 = (Button) findViewById(R.id.button2);
+        b=(Button)findViewById(R.id.button3);
+        p=(ImageView)findViewById(R.id.pic);
+        sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wklock=pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "wklock");	// Get power management services
+        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);	// Get accelerometer
+        lightsensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);	// Obtain light sensor
+        sen_gy = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);		// Get the gyro sensor value
+
+        vibrator=(Vibrator)getSystemService(Service.VIBRATOR_SERVICE);
+        aManager=(AudioManager)getSystemService(Service.AUDIO_SERVICE);
+        mPlayer=MediaPlayer.create(MainActivity.this,R.raw.my);
+        mPowmanager=(PowerManager)getSystemService(Service.POWER_SERVICE);
+        mKeyguardManager = (KeyguardManager) getSystemService(Service.KEYGUARD_SERVICE);
+
+//		----------------initial-----------------
+        saver = new Saver(this.getApplicationContext());
+        set_button();
+        intent = new Intent(this, netLayer.class);		// start model net service
+        intent.putExtra(config.HANDLER_MAIN, new Messenger(handler_main));
+        Log.e(config.LOG_TAG, "main -- on create: 3 ");
+
+        int[] result=t.Classifier(NNet_Path, TestData);
+        String str = "";
+        for (int i:result){
+            str += i+" ";
+        }
+        Log.e(config.LOG_TAG,str);
+//        ---------------initial network----------------
+        InputStream fin = null;
+        try {
+            fin = getAssets().open(NNet_Path);
+            str = "load net work:" + t.loadBPnet(fin);
+            Log.e(config.LOG_TAG,str);
+            Toast.makeText(this,str,Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(config.LOG_TAG,"open net work path failed");
+        }
+        //System.out.print(result1[0][0]);
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                op_set();
+            }
+        });
+    }
+    //------------Start the app display image 1s----------------
+    /*public class WelcomeActivity extends Activity{
+
+        private final long SPLASH_LENGTH = 1000;
+        Handler handler = new Handler();
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.pic);
+            handler.postDelayed(new Runnable() {  //Using handler postDelayed delay jump
+
+                public void run() {
+                    Intent intent = new Intent(WelcomeActivity.this, MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }
+            }, SPLASH_LENGTH);//2s after the jump to the main application interface:MainActivity
+
+        }
+    }*/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onDestroy() {
+        // TODO Automatically generated method stubs
+        wklock.release();
+        super.onDestroy();
+    }
+
+
+
+    private void set_button(){
+
+        button3.setEnabled(false);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                p.setImageResource(image[0]);
+                op_start();
+            }
+        });
+        button3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                p.setImageResource(image[1]);
+                op_stop();
+            }
+        });
+
+    }
+
+    //	-----------------------------operation--------------------------
+    private void op_start(){
+        button.setEnabled(false);
+        button3.setEnabled(true);
+//        bindService(intent, connect, BIND_AUTO_CREATE);
+        sensorManager.registerListener(listener, sensor,config.SENSOR_RATE);
+        sensorManager.registerListener(listener, lightsensor,config.SENSOR_RATE);
+        sensorManager.registerListener(listener,sen_gy,config.SENSOR_RATE);
+        wklock.acquire();
+        task = new TimerTask(){				// timer
+            public void run(){
+                count ++;
+                if (count > config.SENSOR_STEPS){
+                    if (config.MODE_DAY){
+                        if(update_state() == 1){
+                            send_data(data);
+                        }
+                        count --;
+                    } else if (count> config.TIMER_SEND + config.SENSOR_STEPS){
+                        send_data(data);
+                        count -= config.TIMER_SEND;
+                    }
+
+                    for (int i = 0;i < step_dims;i++)
+                        data.pop();
+                }
+                for (int i = 0;i < step_dims;i++)
+                    data.add(gragyr[i]);
+            }
+        };
+        timer = new Timer(true);
+        timer.schedule(task, 0, config.TIMER_PERIOD);
+
+        Toast.makeText(this,"start",Toast.LENGTH_SHORT).show();
+        Log.e(config.LOG_TAG,"on operation start");
+    }
+
+    private void op_stop(){
+        timer.cancel();
+        timer.purge();
+        sensorManager.unregisterListener(listener);
+        button.setEnabled(true);
+        button3.setEnabled(false);
+        wklock.release();
+        Log.e(config.LOG_TAG,"on operation stop");
+//        this.unbindService(connect);
+//		stopService(intent);
+        mPlayer.release();
+        return;
+    }
+
+    private void op_set(){
+        Intent set = new Intent(this,setting.class);
+        startActivity(set);
+    }
+
+    private void send_data(LinkedList<Double> data){
+
+        TestData[0] = saver.list2array((LinkedList<Double>)data.clone());
+        int[] result1 = t.Classifier(NNet_Path,TestData);
+        String str = "";
+        for (int i:result1){
+            str += i+" ";
+            switch (i){
+                case 0:
+                case 1:
+                case 2:
+                    alarm(config.RES_SELF);
+                    break;
+                case 3:
+                    alarm(config.RES_THIEF);
+                    break;
+                case 4:
+                    alarm(config.RES_NORMAL);
+                    break;
+                default:
+                    break;
+            }
+        }
+        Log.e(config.LOG_TAG,str);
+
+//        Message msg = new Message();
+//        msg.obj = data;
+//        msg.what = config.MSG_DATA;
+//        Log.e(config.LOG_TAG,"send data pre");
+//        handler_net.sendMessage(msg);
+//        Log.e(config.LOG_TAG,"send data");
+    }
+    int update_state(){
+        if (STATE == config.STATE_OUT){	//
+            if (light < config.THRE_LIGHT){
+                STATE = config.STATE_IN;
+                Log.e("sensor","state == Enter");			}
+            else return 0;
+        }else if (STATE == config.STATE_IN){ //
+            if (light > config.THRE_LIGHT){
+                STATE = config.STATE_OUTING;
+                time_step = 0;
+                Log.e("sensor","state == Take pocket");			}
+        }else{								//
+            time_step ++;
+            if (time_step >= config.SENSOR_STEPS/2){
+                STATE = config.STATE_OUT;
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+//----------------------zzy-------------------
+    private void alarm(int x){
+        if(x==config.RES_THIEF)
+        {
+            vibrator.vibrate(5000);
+            mPlayer=MediaPlayer.create(MainActivity.this,R.raw.my);
+            mPlayer.setLooping(true);
+            mPlayer.start();
+        }else if(x==config.RES_SELF)
+        {
+            mWakelock= mPowmanager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "Tag");
+            mWakelock.acquire();
+        }
+    }
+}
+
+
+
