@@ -1,0 +1,217 @@
+package com.example.a0000.guardian;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.LinkedList;
+
+//import net.sf.json.JSONArray;
+//import net.sf.json.JSONException;
+//import net.sf.json.JSONObject;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+import android.os.Environment;
+import android.util.Log;
+
+
+public class Saver {
+	final static String key_size = "size";
+	final static String NOTFOUND = "not found";
+	final static String KEY_CLASSES = "classes";
+	final static String KEY_BATCHES = "batch";
+	final static int BATCH_SIZE = 5;
+	final static int DATA_DIM = 6;
+	final static int DATA_LEN = 300;
+
+	SharedPreferences saver;
+	Editor editor;
+	String datafile = "guadian-data";
+	
+	public Saver(Context cont) {
+		saver = cont.getSharedPreferences(datafile,Context.MODE_PRIVATE|Context.MODE_APPEND);
+		editor = saver.edit();
+		
+	}
+	
+	public int save(String cls,LinkedList<Double> d){
+		if (d.size() != DATA_LEN){
+			Log.e(config.LOG_TAG,"lenght short");
+			return 1;
+		}
+		String one = this.list2string(d, cls);
+
+		int i = saver.getInt(cls, 0);
+		String key = cls+"-"+i;
+		
+		Log.e(config.LOG_TAG,"lenght short");
+		editor.putString(key, one);
+		editor.putInt(cls, i+1);
+		if(i == 0){	
+			editor.putInt(KEY_CLASSES,saver.getInt(KEY_CLASSES,0)+1);
+			Log.e(config.LOG_TAG,"lenght short");
+			editor.putString(KEY_CLASSES, saver.getString(KEY_CLASSES, "") + " " + cls);
+		}
+		editor.commit();
+		Log.e(config.LOG_TAG,"lenght short");
+		return 0;
+	}
+	double[][] get(String cls){
+		// get data of class cls
+		int i = 0,size = saver.getInt(cls, 0);
+		Log.e(config.LOG_TAG, "saver get() --> size:" + size);
+		double[][] data = new double[size][];
+		Log.e(config.LOG_TAG, "saver get() --> size:" + size);
+		String ret,key = cls+"-"+i;
+		while((ret = saver.getString(key, NOTFOUND)) != NOTFOUND){
+			data[i] = this.string2array(ret);
+			i++;
+			key = cls+"-"+i;
+		}		
+		Log.e(config.LOG_TAG, "get size:"+size+"\ti:"+i);
+		return data;
+	}
+	void clear(){
+		// clear all data
+		editor.clear();
+		editor.commit();
+	}
+	void remave(String cls,int batch){
+		int i = 0,size = saver.getInt(cls+"-"+batch, 0);
+		String key = cls+"-"+batch+"-"+i;
+		for(;i<size;i++){
+			editor.remove(key);			
+		}
+		editor.commit();
+	}
+	String[] get_clses(){	
+		Log.e(config.LOG_TAG, "saver --> size:" + saver.getInt(KEY_CLASSES, 0));
+		return saver.getString(KEY_CLASSES,"").split(" ");
+	}
+	
+	double[] list2array(LinkedList<Double> d){
+		double[] data = new double[DATA_LEN];
+		for (int i = 0;i<DATA_LEN;i++){
+			data[i] = d.getFirst();
+			d.pop();
+		}
+		return data;
+	}
+	String list2string(LinkedList<Double> d, String cls){
+		String str = "";
+		Log.e(config.LOG_TAG, "list2string"+d.size());
+		for (int i = 0;i<DATA_LEN;i++){
+			str += d.getFirst()+";";
+			d.pop();
+		}
+		return str+cls;
+	}
+	double[] string2array(String str){
+		double[] data = new double[DATA_LEN+1];
+		int i = 0;
+		for (String j: str.split(";")){
+			data[i] = Double.valueOf(j);
+			i++;
+		}
+		Log.e(config.LOG_TAG, "string2list");
+		return data;
+	}
+	// ------------------------------------
+	String read_txt(String file){
+		Log.e("sensor", "h");
+		String data = "";
+		BufferedReader reader = null;			//sys
+		FileInputStream input;
+		File isfile;
+		if(!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+			try {
+				input = new FileInputStream(file);
+				reader = new BufferedReader(new InputStreamReader(input));
+			} catch (FileNotFoundException e) {
+      
+				e.printStackTrace();
+			}
+		}else{
+			isfile = new File(Environment.getExternalStorageDirectory(),file);
+			if (!isfile.isFile()){
+				Log.e("sensor", "h:read");
+				return data;
+			}			
+			try {
+				input = new FileInputStream(isfile);
+				reader = new BufferedReader(new InputStreamReader(input));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+		try{
+			reader.close();
+		}catch(IOException e){
+			Log.e("sensor","read error");
+		}
+		return data;
+	}
+	
+	void save_txt(String file,String datas){
+		Log.e("sensor","save text:"+file);
+		FileOutputStream out;
+		BufferedWriter writer = null;			//sys
+		try{
+			out = new FileOutputStream(file);	// sys
+			writer = new BufferedWriter(new OutputStreamWriter(out));
+			writer.write(datas);
+		}catch(IOException e){
+			Log.e("sensor","wirte error");
+		}finally{
+			if (writer != null){
+				try {
+					writer.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	void save_txt_sd(String file,String datas){
+		if(!Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+			save_txt(file,datas);
+			return;
+		}
+		File sdFile = new File(Environment.getExternalStorageDirectory(),file); // sd card
+		if (!sdFile.exists()){
+			Log.e("sensor","h:write");				// sd card
+			try {
+				sdFile.createNewFile();
+			} catch (IOException e) {
+				Log.e("sensor","h");				// sd card
+				e.printStackTrace();
+				return;
+			}
+		}
+		ArrayList<Float> testdata = new ArrayList<Float>();
+		testdata.add((float) 2.);
+		try {
+			BufferedWriter out = new BufferedWriter(new FileWriter(sdFile,true));
+			out.write(datas);
+//			out.write(testdata.);
+			out.flush();
+			out.close();
+			Log.e("sensor","h");				// sd card
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}		
+	}
+
+}
