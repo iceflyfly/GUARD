@@ -1,0 +1,108 @@
+package com.example.a0000.guardian;
+
+import java.util.ArrayList;
+import java.util.LinkedList;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
+import android.util.Log;
+
+public class netLayer extends Service {
+
+//	LinkedList<Float> data;
+	int count = 0;
+	BinderNL binder = new BinderNL();
+	private Messenger msger;
+	ArrayList<Float> data;
+
+	private Handler my_handler = new Handler(){
+		public void handleMassage(Message msg){
+			
+			switch(msg.what){
+			case config.MSG_DATA:
+				data = new ArrayList<Float>((LinkedList<Float>) msg.obj);
+//				data = (LinkedList<Float>) msg.obj;
+				count++;
+				send_info("net layer: received!"+data.size());
+				break;
+			default:
+				send_info("net layer: unknow message!");
+				break;
+			}
+		}
+	};
+//	----------------------------initial-----------------------------
+
+	private void initial(){
+		send_info("net layer created!");
+		Log.e(config.LOG_TAG,"net layer created!");
+	}
+
+//	--------------------------run--------------------------------
+	@Override
+	public IBinder onBind(Intent intent) {
+		msger = (Messenger)intent.getExtras().get(config.HANDLER_MAIN);
+		Log.e(config.LOG_TAG, "net layer: get main handler");
+		Message msg = new Message();
+		msg.what = config.MSG_HANDLER;
+		msg.obj = my_handler;
+//		main_handler.sendMessage(msg);
+		try {
+			msger.send(msg);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			Log.e(config.LOG_TAG, "net layer: yichang");
+		}
+		Log.e(config.LOG_TAG, "net layer: send handler");
+		binder.setHandler(my_handler);
+		return binder;
+	}
+	
+	@Override
+	public void onCreate() {
+		Log.e(config.LOG_TAG, "net layer: on create");
+		super.onCreate();
+	}
+
+	@Override
+	public int onStartCommand(Intent intent, int flags, int startId) {
+
+		return super.onStartCommand(intent, flags, startId);
+	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+	}
+
+	//	------------------------operation----------------------------
+	private void send_info(String str){
+		Message msg = new Message();
+		msg.obj = str;
+		msg.what = config.MSG_INFO;
+		try {
+			msger.send(msg);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+//		main_handler.sendMessage(msg);
+	}
+	private void send_res(String res){
+		Message msg = new Message();
+		msg.obj = res;
+		msg.what = config.MSG_RESULT;
+		try {
+			msger.send(msg);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
+//		main_handler.sendMessage(msg);
+	}
+
+}
+
