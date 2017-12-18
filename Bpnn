@@ -1,0 +1,441 @@
+package com.example.a0000.guardian;
+
+
+import java.io.*;
+import java.util.*;
+import org.joone.engine.*;
+import org.joone.engine.learning.TeachingSynapse;
+import org.joone.io.*;
+import org.joone.net.*;
+
+public class bpnn implements NeuralNetListener,Serializable {
+
+	private static final long serialVersionUID = -3597853311948127352L;
+	private FileInputSynapse inputStream = null;
+	private NeuralNet nnet = null;
+	String TrainFile="E:\\project\\nn\\nn\\data.txt";
+	String LabelFile="E:\\project\\nn\\nn\\label.txt";
+	String NNet_Init_Path="E:\\project\\nn\\model-0527\\bpnn.snet";
+	String NNet_Change_Path = "E:\\project\\nn\\nn\\bpnn.snet";
+
+//    -------------------------------------
+    NeuralNet testBPNN = null;
+	
+	/*public static void main(String args[]) throws IOException {
+		bpnn t = new bpnn();
+		String NNet_Path="E:\\project\\nn\\nn\\bpnn.snet";//Network open path, default:self-learning training network
+
+		//t.resetModel();//Reset the network, network opened path: initial position, the training network is stored to the default self-learning network
+	
+		//t.Train_BPNN(NNet_Path,10);
+		t.errorrate("E:\\project\\nn\\nn\\bpnn_out.txt","E:\\project\\nn\\nn\\label.txt");
+		//t.initNeuralNet();
+		double[][] TestData={{-0.4127655,-4.597809,0.5395813,1.2507019,1.0126038,0.114349365,-0.30030823,-8.985046,-1.2167511,1.0008698,0.37120056,0.4264984,-0.09451294,-7.9286194,-1.2789612,0.879303,1.0242157,0.19802856,0.27038574,-8.443085,-1.6917267,0.86402893,0.52207947,0.63357544,1.6881409,-10.1707,-1.426117,0.74858093,1.0254364,0.5798187,6.569504,-13.648666,-1.7946167,0.5359955,0.643631,0.4063263,-1.450058,-12.658035,-1.774292,-0.11212158,-0.19628906,-0.99253845,-3.434906,-11.930618,-4.508087,-0.94044495,-1.2433014,-0.7103119,-5.790634,-14.535202,2.371292,-2.253189,0.47076416,-0.10922241,-1.9226379,-12.076584,-1.272995,-1.3057404,0.71022034,0.17114258,-0.66999817,-6.1567383,-2.499298,-1.4645691,-0.016693115,-0.12023926,-0.49172974,-3.9338074,-1.1736908,-1.2556458,-1.1938324,0.19984436,-0.23928833,-5.108673,-1.1688995,-0.55804443,-0.3746643,-0.16786194,-0.4893341,-5.4388885,-2.539978,0.19270325,-0.5139313,-0.22529602,1.3352051,-8.91806,-6.4115753,1.6056213,-0.9464264,-0.79522705,-5.5824585,-14.560333,-7.274185,0.14994812,-0.25187683,-1.4317474,-2.5256348,-11.167313,-8.989838,-0.7364197,0.26124573,-0.7640686,-0.7405853,-14.85704,0.8063812,-0.8329315,1.2905579,-0.66633606,2.555542,-7.680969,0.86979675,0.7210846,1.7798462,-0.62480164,1.0887299,-7.672592,0.6795654,0.5506592,1.1085052,-0.6186981,2.1559448,-11.533417,-1.4990997,0.4596405,0.78842163,1.3452301,-0.31585693,-4.4351044,1.9525452,0.32035828,0.8378906,0.7300873,1.7671051,-7.235901,-0.5886383,0.8628082,1.684555,0.7154236,1.5206451,-6.9595337,-0.20817566,0.28004456,1.8451996,0.8760834,1.5780792,-8.708679,-2.745758,0.47857666,0.10058594,1.2395477,4.482956,-10.916061,-2.6476593,0.24951172,0.5465088,0.96343994,5.399399,-10.552353,-0.41755676,0.24095154,0.6729584,0.56025696,2.999405,-11.716461,-2.7840576,0.23301697,-0.019134521,-0.23995972,3.2039948,-15.583267,-0.0993042,0.15725708,-0.2952423,-0.86486816,-1.183258,-12.579071,-2.4610138,-0.12005615,-1.4980316,-1.790329,-3.7124786,-12.744186,1.4356995,-0.90501404,-0.55119324,-1.2063446,4.1730804,-9.156143,-1.3052979,-0.45970154,-0.6299896,-0.6669464,2.0602264,-7.1066895,-0.98583984,-0.14816284,-1.0539398,-0.75857544,0.72502136,-7.063614,-0.14237976,0.4602661,-0.8040924,-0.31019592,1.9788666,-8.584259,-0.5970154,1.1517487,-0.37954712,-0.010894775,4.022339,-7.8664093,-5.246277,1.5451508,0.5092621,0.33302307,6.5563354,-11.175674,-0.5539398,1.1425934,-0.4705658,-1.1593018,9.396622,-9.902695,-0.3589325,0.8041687,0.61187744,-1.2692566,6.8638153,-10.49971,-2.8414764,1.138916,1.915451,-3.1091766,10.051056,-7.5577393,3.1202393,0.7608032,2.2844086,-3.218521,10.577484,-6.5431824,6.1663055,0.50302124,2.0724487,-4.203232,7.3902435,-5.44368,4.8047943,1.0124664,2.6521606,-6.1121826,3.3332062,-2.712265,4.7533417,0.57936096,2.881836,-6.277115,2.6823578,0.29432678,4.626526,-0.4358673,3.0693817,-4.4469604,4.8837585,1.0193481,5.6195526,-0.6533356,2.5464783,-3.993103,4.5786743,1.1377869,8.764908,-0.42793274,2.796936,-3.7896729,-0.105285645,2.4347076,6.8805695,0.3796234,3.168335,-2.6895142,0.54914856,3.4720001,10.124039,0.91534424,1.2483826,-2.001068,-0.6424866,4.5355988,6.273987,1.3362427,0.27896118,-1.7048035,0.33738708,3.1298218,9.024536,0.29226685,-0.9097748,-0.95710754
+			-2.8510482,-6.634101,-19.599611,1.3365731,-0.27488935,-1.8851302,-7.873583,-1.66361,4.752744,-2.8906143,1.563815,-1.2290609,4.551747,-7.0337024,2.6691937,0.9224065,1.2425,3.4538321,1.1312069,-8.930613,-2.8235307,1.6908749,1.5943583,1.563815,-2.3186452,-15.41576,-0.7956135,0.9957103,1.3817772,-0.02687807,4.491926,-11.109876,-4.706084,1.5784758,1.8704693,-0.028099801,4.909474,-16.290337,1.622932,0.87964594,0.79534656,-1.6933185,-1.8939191,-12.772887,11.566905,0.9737192,1.001819,-2.6535985,-3.0173495,-10.986047,4.298706,0.57910025,-0.50579643,-2.9553661,-4.5936213,-8.800203,6.332007,0.9456194,0.22724187,-3.145956,-4.5936213,-8.800203,6.332007,1.0958922,-0.938289,-1.5931365,2.5387847,-8.437093,-3.952345,0.43249258,-2.4886649,-1.0848967,3.4259238,-5.925227,0.04007978,-0.13072516,-1.5247196,-1.4416419,3.0957143,-6.4181485,-1.1862419,-0.17959438,-1.3487904,-1.4294246,4.0199423,-6.7663045,-1.2765709,0.530231,-0.17470746,0.7501425,4.2095733,-8.473583,3.5270207,0.23335052,0.5216789,1.8460348,3.091527,-12.519846,3.0089746,0.5815437,1.9572122,2.3921483,14.636896,-15.381064,-0.007178468,1.6908749,2.1783454,2.719572,3.714857,-13.453047,3.8410785,2.1697934,1.5503759,0.75625116,0.7375876,-12.373286,2.8827531,2.2174408,1.2388347,0.4447099,-3.4283166,-10.362717,1.1485549,1.7116444,1.3365731,1.6016886,6.9020967,-6.282356,4.307679,0.23335052,1.0897835,1.6505579,3.7680974,-4.8622155,6.4612193,-0.66828656,1.2473868,-0.4728097,5.519644,-6.3565335,11.222339,-0.63285637,-0.04642576,-2.411696,1.183849,-13.059428,10.636695,-0.1282817,0.37995818,-3.6969564,-0.19322044,-10.589437,5.7020965,3.8386772,-0.15149458,-6.686531,-0.19322044,-10.589437,5.7020965,4.3310347,1.6346754,-5.7323594,1.5038891,-8.29113,3.9583268,4.392121,2.6303856,-5.4953437,3.0478578,-4.599005,5.471189,4.1819835,2.6438248,-5.1972413,-0.12861422,-6.4325056,3.437888,3.3744197,4.3395867,-7.2192054,-6.593423,-4.9250274,2.7098718,0.9737192,2.2015584,-7.6883497,-6.4199433,-0.8117651,9.142976,-2.0158553,-0.7855727,-5.8215456,-6.2135625,1.6235301,16.639091,-3.880216,-0.8943067,-2.7757716,-4.0570307,-1.5050855,8.476574,0.5729916,2.7464502,0.73792523,-2.1882362,-1.0001999,6.0191455,0.10506882,1.1557571,2.2223277,-1.7581265,0.7471589,7.9280195,-0.089186326,0.20525073,2.3286183,-5.8707905,3.3672998,8.642278,-1.1203269,1.7116444,2.5350907,-3.3367913,2.7840493,11.257632,-0.6010914,0.9297369,2.701246,-2.2731814,2.1684957,4.6695933,1.205848,0.22113322,2.2076669,-3.4983068,2.2360928,11.493924,1.4648548,-1.9462167,1.5076154,-6.055038,0.2973082,12.477374,-1.709201,-0.7293731,-0.2773328,2.0111675,2.55374,6.539584,0.6719518,-3.3353243,0.3933972,-1.5433706,1.7120646,9.068798,-0.5094616,-0.5314528,0.05375614,-1.5433706,1.7120646,9.068798,-0.39095375,-0.7831292,-0.98715824,-0.031106696,2.4448667,6.052047,0.28710666,-1.455081,-1.0763446,4.3722854,2.5908287,5.148756,0.31520647,-1.5051719,-1.0213667,2.120639,0.46899325,5.1625147,0.21502456,-4.293161,-1.0910053,-1.689931,-1.5373886,2.155335,0.81245077,-7.0958104,-0.9138544,-6.134599,-5.252246,6.5485573,2.8344147,-12.433551,1.799609,6.4468627,-9.491131,-4.510471,5.362175,-9.550267,4.146553
+}};
+		int[] result=t.Classifier(NNet_Path, TestData);
+		System.out.println(result[0]);//Classification results: 0-4
+		
+
+	}*/
+	
+	public void resetModel()
+	{
+		//NNet_Init_Path open path
+		nnet = Get_BPNN(NNet_Init_Path);
+		saveNeuralNet(NNet_Change_Path);
+		//test(NNet_Init_Path);
+		
+	}
+	
+	/*
+	 * Classification function
+	 * Input: double[][] Data sets to be sorted
+	 * Output: int[] Data set classification results
+	 */
+	public int[] Classifier(String NNet_Path,double[][] TestData){
+		int[] result=new int[TestData.length];
+		double[][] temp=Test_BPNN(NNet_Path,TestData);
+		
+		//temp is the classification data set, the classification result is in int, from 0-4
+		int maxindex=0;
+		for(int i=0;i<temp.length;i++){
+			maxindex=0;
+			for(int j=1;j<temp[i].length;j++)
+			{
+				if(temp[i][j]>temp[i][maxindex])
+					maxindex=j;
+			}
+			result[i]=maxindex;
+		}
+		
+		return result;
+	}
+	
+	/*
+	 * Training error rate of training data set is calculated
+	 * Input：
+	 */
+	@SuppressWarnings("null")
+	public void errorrate(String resultFile,String LabelFile) throws IOException
+	{
+		File file= new File(resultFile);
+		File targetfile = new File(LabelFile);
+		Reader reader = null;
+		Double[][] result = null;
+		try {
+            reader = new BufferedReader(new FileReader(file));
+            BufferedReader br = new BufferedReader(reader);
+            
+            String tempString = null;
+            result = new Double[11715][];
+            int i = 0;
+            // Input one line at a time, until the end of the document read into null
+            while ((tempString = br.readLine()) != null) {
+                // Display line number
+                //System.out.println("line " + i + ": " + tempString);
+                String[] temp = tempString.split(";");
+                Double[] temp2 = new Double[temp.length];
+                result[i]=new Double[temp.length];
+                for(int j=0;j<temp.length;j++)
+                	temp2[j]=Double.parseDouble(temp[j]);
+                System.arraycopy(temp2, 0, result[i], 0, temp.length);
+                i++;
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e1) {
+                }
+            }
+        }
+		reader = null;
+		Double[][] target = null;
+		try {
+            reader = new BufferedReader(new FileReader(targetfile));
+            BufferedReader br = new BufferedReader(reader);
+            
+            String tempString = null;
+            
+            target = new Double[11715][];
+            int i = 0;
+            // Input one line at a time, until the end of the document read into null
+            while ((tempString = br.readLine()) != null) {
+                // Display line number
+                //System.out.println("line " + i + ": " + tempString);
+                String[] temp = tempString.split(";");
+                Double[] temp2 = new Double[temp.length];
+                target[i]=new Double[temp.length];
+                for(int j=0;j<temp.length;j++)
+                	temp2[j]=Double.parseDouble(temp[j]);
+                System.arraycopy(temp2, 0, target[i], 0, temp.length);
+                i++;
+            }
+            reader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e1) {
+                }
+            }
+        }
+		
+		int[] targetclsfy = new int[11715];
+		int[] resultclsfy = new int[11715];
+		int error=0;
+		//Classification results and target classification
+		int maxindex=0;
+		for(int i=0;i<target.length;i++){
+			maxindex=0;
+			for(int j=1;j<target[i].length;j++)
+			{
+				if(target[i][j]>target[i][maxindex])
+					maxindex=j;
+			}
+			targetclsfy[i]=maxindex;
+		}
+		for(int i=0;i<result.length;i++){
+			maxindex=0;
+			
+			for(int j=1;j<result[i].length;j++)
+			{
+			
+				if(result[i][j]>result[i][maxindex])
+					maxindex=j;
+			}
+			resultclsfy[i]=maxindex;
+			
+		}
+		
+		for(int i=0;i<targetclsfy.length&&i<resultclsfy.length;i++)
+		{
+			if(targetclsfy[i]!=resultclsfy[i])
+				error=error+1;
+		}
+		System.out.println("errorrate");
+		System.out.println((double)error/11715);
+		
+	}
+	
+	static NeuralNet Get_BPNN(String NNet_Path) {
+        NeuralNetLoader loader = new NeuralNetLoader(NNet_Path);
+        NeuralNet nnet = loader.getNeuralNet();
+        return nnet;
+    }
+//    ------------------------wzh----------------------
+    int loadBPnet(InputStream fin){
+        ObjectInputStream oin = null;
+        try {
+            oin = new ObjectInputStream(fin);
+            testBPNN = (NeuralNet)oin.readObject();
+            oin.close();
+            fin.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return 1;
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return 1;
+        }
+        return 0;
+    }
+	
+	/**Use memory matrix to test trained neural network
+     * String NNet_Path Neural network storage path
+     * double[][] TestData  Test matrix
+     * int[][] result   returned results
+     * */
+    public double[][] Test_BPNN(String NNet_Path,double[][] TestData){
+
+//        NeuralNet testBPNN = Get_BPNN(NNet_Path);
+        double[][] result = new double[TestData.length][5];
+        if (testBPNN != null) {
+            double[] temp = new double[5];      
+
+            Layer input = testBPNN.getInputLayer();         
+            /**Use matrix input test*/
+            MemoryInputSynapse inputStream = new MemoryInputSynapse();
+            input.removeAllInputs();
+            input.addInputSynapse(inputStream);
+            inputStream.setInputArray(TestData);
+            inputStream.setAdvancedColumnSelector("1-300");
+
+            Layer output = testBPNN.getOutputLayer();
+            MemoryOutputSynapse fileOutput = new MemoryOutputSynapse();
+            output.addOutputSynapse(fileOutput);
+
+            Monitor monitor = testBPNN.getMonitor();
+            monitor.setTrainingPatterns(TestData.length);
+            monitor.setTotCicles(1);
+            monitor.setLearning(false);         
+            testBPNN.go();
+           
+            for(int i = 0;i<result.length;i++){
+                temp = fileOutput.getNextPattern();
+        
+                result[i][0] = temp[0];
+                result[i][1] = temp[1];
+                result[i][2] = temp[2];
+                result[i][3] = temp[3];
+                result[i][4] = temp[4];
+            }
+            System.out.println("test");
+
+            return result;
+        }
+        return result;
+    }
+	
+	protected void Train_BPNN(String NNet_Path,int maxTrain){
+        //Initialize the save path of neural network
+        //this.NNet_Path = NNet_Path;
+        //Get saved neural network
+        nnet = Get_BPNN(NNet_Path);
+
+
+        Monitor monitor = this.nnet.getMonitor();
+        monitor.setLearningRate(0.2);
+        monitor.setMomentum(0.3);
+        monitor.addNeuralNetListener(this);
+        
+        
+        
+        monitor.setTrainingPatterns(11715);
+        monitor.setTotCicles(maxTrain); 
+        monitor.setLearning(true);
+		nnet.go(); /* The network starts the training phase */
+    }
+
+	/*Initialize the network, create a new network
+	 * Three-layer neural network, activation function:Sigmoid
+	 * The learning rate is 0.2 and the momentum factor is 0.3
+	 */
+	protected void initNeuralNet() {
+
+		// Three layers: input layer, hidden layer, output layer
+		// create the three layers (using the sigmoid transfer function for the
+		// hidden and the output layers)
+		SigmoidLayer input = new SigmoidLayer();
+		SigmoidLayer hidden = new SigmoidLayer();
+		//SigmoidLayer hidden2 = new SigmoidLayer();
+		SigmoidLayer output = new SigmoidLayer();
+
+		// set their dimensions(Neurons):
+		// Set the number of neurons in each layer
+		input.setRows(300);
+		hidden.setRows(100);
+		//hidden2.setRows(100);
+		output.setRows(5);
+
+		// Now build the neural net connecting the layers by creating the two
+		// synapses(Synapse)
+		// The three layers need two synapses to connect with them to create neurons
+		FullSynapse synapse_IH = new FullSynapse(); /* Input -> Hidden conn. */
+		FullSynapse synapse_HO = new FullSynapse(); /* Hidden -> Output conn. */
+
+		// Connect operation
+		// Next connect the input layer with the hidden layer:
+		input.addOutputSynapse(synapse_IH);
+		hidden.addInputSynapse(synapse_IH);
+		// and then, the hidden layer with the output layer:
+		hidden.addOutputSynapse(synapse_HO);
+		output.addInputSynapse(synapse_HO);
+
+		// need a NeuralNet object that will contain all the Layers of the
+		// network
+		// Create a network to hold the layers
+		nnet = new NeuralNet();
+		nnet.addLayer(input, NeuralNet.INPUT_LAYER);
+		nnet.addLayer(hidden, NeuralNet.HIDDEN_LAYER);
+		nnet.addLayer(output, NeuralNet.OUTPUT_LAYER);
+		
+		Monitor monitor = nnet.getMonitor();
+		// Set the learning rate of neural network
+		monitor.setLearningRate(0.2);
+		// Setting the momentum of the neural network to 0.3 These two variables are related to the step size
+		monitor.setMomentum(0.3);
+		monitor.addNeuralNetListener(this);
+		
+		
+		
+		// Input stream
+		inputStream = new FileInputSynapse();
+		/* The first two columns contain the input values */
+		inputStream.setAdvancedColumnSelector("1-300");
+		/* This is the file that contains the input data */
+		inputStream.setInputFile(new File(TrainFile));
+		// Next add the input synapse to the first layer.
+		input.addInputSynapse(inputStream);
+
+	
+		
+
+		TeachingSynapse trainer = new TeachingSynapse();
+		/*
+		 * Setting of the file containing the desired responses, provided by a
+		 * FileInputSynapse
+		 */
+		FileInputSynapse samples = new FileInputSynapse();
+		samples.setInputFile(new File(LabelFile));
+		/* The output values are on the third column of the file */
+		samples.setAdvancedColumnSelector("1-5");
+		trainer.setDesired(samples);
+		
+		
+		output.addOutputSynapse(trainer);
+		/* We attach the teacher to the network */
+		nnet.setTeacher(trainer);
+		
+		monitor.setTrainingPatterns(11715); /* # of rows in the input file */
+		monitor.setTotCicles(100); /* How many times the net must be trained*/
+		
+		monitor.setLearning(true); /* The net must be trained */
+		nnet.go(); /* The network starts the training phase */
+
+	}
+
+
+	@Override
+	public void netStarted(NeuralNetEvent e) {
+		System.out.println("Training...");
+
+	}
+
+	@Override
+	public void cicleTerminated(NeuralNetEvent e) {
+		Monitor mon = (Monitor)e.getSource();
+		long c = mon.getCurrentCicle();
+		/* We want print the results every 100 epochs */
+		if (c % 10 == 0)
+		System.out.println(c + " epochs remaining - RMSE = " +
+		mon.getGlobalError());
+
+	}
+
+	@Override
+	public void netStopped(NeuralNetEvent e) {
+		System.out.println("Training Stopped...");
+		long mystr = System.currentTimeMillis(); // Initialize the current system time
+		System.out.println(mystr);
+
+		saveNeuralNet(NNet_Change_Path); // Save the myxor.snet neural network that generated the current time, can not use NNet_Path
+		test(NNet_Change_Path);
+
+	}
+	public void test(String NNet_Path){
+		NeuralNet xorNNet = restoreNeuralNet(NNet_Path);//Can not use NNet_Path
+		if (xorNNet != null) {
+		// we get the output layer
+		Layer output = xorNNet.getOutputLayer();
+		// we create an output synapse
+		FileOutputSynapse fileOutput = new FileOutputSynapse();
+		fileOutput.setFileName("E:\\project\\nn\\nn\\bpnn_out.txt");
+		// we attach the output synapse to the last layer of the NN
+		output.addOutputSynapse(fileOutput);
+		
+		// we run the neural network only once (1 cycle) in recall mode
+		xorNNet.getMonitor().setTotCicles(1);
+		xorNNet.getMonitor().setLearning(false);
+		xorNNet.go();
+		}
+	}
+	@Override
+	public void errorChanged(NeuralNetEvent e) {
+		Monitor mon = (Monitor) e.getSource();// Get the monitoring layer of information
+		long c = mon.getCurrentCicle();
+		if (c % 10 == 0)
+		System.out.println("Cycle: "
+				+ (mon.getTotCicles() - mon.getCurrentCicle()) + " RMSE:"
+				+ mon.getGlobalError()); // Output the number of training and rmse mean square error
+
+	}
+	
+	public void saveNeuralNet(String fileName) {
+		try {
+			FileOutputStream stream = new FileOutputStream(fileName);
+			ObjectOutputStream out = new ObjectOutputStream(stream);
+			out.writeObject(nnet);//Write nnet object
+			out.close();
+		} catch (Exception excp) {
+			excp.printStackTrace();
+		}
+	}
+	
+	NeuralNet restoreNeuralNet(String fileName) {
+		NeuralNetLoader loader = new NeuralNetLoader(fileName);
+		NeuralNet nnet = loader.getNeuralNet();
+		return nnet;
+		}
+	@Override
+	public void netStoppedError(NeuralNetEvent e, String error) {
+		// TODO Auto-generated method stub
+
+	}
+}
