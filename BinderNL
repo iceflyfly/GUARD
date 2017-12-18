@@ -1,0 +1,14 @@
+package com.example.a0000.guardian;
+
+import android.os.Binder;
+import android.os.Handler;
+
+public class BinderNL extends Binder {
+	Handler handler;
+	void setHandler(Handler h){
+		handler = h;
+	}
+	Handler getHandler(){
+		return handler;
+	}
+}
